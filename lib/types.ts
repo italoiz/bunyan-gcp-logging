@@ -8,43 +8,33 @@ export interface ServiceContext {
   version?: string;
 }
 
-export interface StackdriverLogEntry {
-  severity?: number;
-  message?: string;
-  httpRequest?: HttpRequest;
-  serviceContext?: ServiceContext;
-  /** Other Properties */
-  [key: string]: any;
-}
-
 export interface HttpRequest {
-  requestMethod: string;
-  requestUrl: string;
-  requestSize?: string;
-  status: number;
-  responseSize?: string;
+  requestMethod?: string;
+  requestUrl?: string;
+  requestSize?: number;
+  status?: number;
+  responseSize?: number;
   userAgent?: string;
   remoteIp?: string;
   serverIp?: string;
   referer?: string;
-  latency?: string;
-  cacheLookup: boolean;
+  latency?: string | {seconds: number; nanos: number};
+  cacheLookup?: boolean;
   cacheHit?: boolean;
   cacheValidatedWithOriginServer?: boolean;
-  cacheFillBytes?: string;
-  protocol: string;
+  cacheFillBytes?: number;
+  protocol?: string;
 }
 
-/** Severity Numbers from StackDriver */
-export const enum Severity {
-  DEBUG = 100,
-  INFO = 200,
-  NOTICE = 300,
-  WARNING = 400,
-  ERROR = 500,
-  CRITICAL = 600,
-  ALERT = 700,
-  EMERGENCY = 800,
+export interface LogEntry {
+  logName: string;
+  severity: string;
+  message?: string;
+  httpRequest?: HttpRequest;
+  serviceContext?: ServiceContext;
+  timestamp?: string;
+  /** Other Properties */
+  [key: string]: any;
 }
 
 export const enum Level {
@@ -54,6 +44,35 @@ export const enum Level {
   INFO = 30,
   DEBUG = 20,
   TRACE = 10,
+}
+
+export interface BunyanHttpHeaders {
+  [key: string]: string;
+}
+
+export interface BunyanHttpRequestRecord {
+  /**
+   * The http method, like: GET, POST
+   */
+  method?: string;
+  /**
+   * The URL of request.
+   */
+  url?: string;
+  /**
+   * Object with headers of the request.
+   */
+  headers?: BunyanHttpHeaders;
+  /**
+   * The remote IP Address.
+   */
+  remoteAddress?: string;
+  /**
+   * The remote IP Port.
+   */
+  remotePort?: number;
+  /** Other custom properties */
+  [key: string]: any;
 }
 
 export interface BunyanLogRecord {
@@ -89,6 +108,10 @@ export interface BunyanLogRecord {
    * Object giving log call source info. This is added automatically by Bunyan if the "src: true" config option is given to the Logger. Never use in production as this is really slow.
    */
   src?: Object;
+  /**
+   * Object of http request.
+   */
+  req?: BunyanHttpRequestRecord;
 
   // And arbitrary other properties.
   [key: string]: any;

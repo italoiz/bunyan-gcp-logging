@@ -1,16 +1,17 @@
 import {format} from 'util';
 import Bunyan from 'bunyan';
 import {Transform, TransformCallback, Writable} from 'stream';
-import {ServiceContext, StackdriverLogEntry, Level, Severity, BunyanLogRecord} from './types';
+import {LogEntry, Level, BunyanLogRecord, BunyanHttpRequestRecord, HttpRequest} from './types';
 
-const Level2Severity: Record<Level, Severity> = {
-  [Level.FATAL]: Severity.CRITICAL,
-  [Level.ERROR]: Severity.ERROR,
-  [Level.WARN]: Severity.WARNING,
-  [Level.INFO]: Severity.INFO,
-  [Level.DEBUG]: Severity.DEBUG,
-  [Level.TRACE]: Severity.DEBUG,
-};
+// Map of Cloud Logging levels.
+const BUNYAN_TO_GCP_CLOUD_LOGGING: Map<number, string> = new Map([
+  [60, 'CRITICAL'],
+  [50, 'ERROR'],
+  [40, 'WARNING'],
+  [30, 'INFO'],
+  [20, 'DEBUG'],
+  [10, 'DEBUG'],
+]);
 
 /**
  * TAKEN from bunyan source code. (but modified)
@@ -34,7 +35,7 @@ function fastAndSafeJsonStringify(rec: any): string {
   }
 }
 
-export class StackdriverTransformer extends Transform {
+export class GCPCloudLoggingTransformer extends Transform {
   constructor() {
     super({
       writableObjectMode: true,
@@ -59,33 +60,50 @@ export class StackdriverTransformer extends Transform {
   /**
    * Format a bunyan record into a Stackdriver log entry.
    */
-  private formatEntry(record: BunyanLogRecord): StackdriverLogEntry {
+  private formatEntry(record: BunyanLogRecord): LogEntry {
     // extract field we want to transform or discard
-    const {msg, level, err, req, v, hostname, pid, ...others} = record;
+    const {name: logName, msg, level, err, req, v, hostname, pid, time: timestamp, ...others} = record;
 
-    const baseEntry: StackdriverLogEntry = {
-      message: msg,
-      severity: Level2Severity[level],
+    const entry: LogEntry = {
+      logName,
+      timestamp,
+      message: record?.message ?? msg,
+      severity: BUNYAN_TO_GCP_CLOUD_LOGGING.get(Number(level)) as string,
       ...others,
     };
 
-    if (err && err.stack) {
-      baseEntry.message = err.stack;
-      baseEntry.serviceContext = {
-        service: record.name,
-      };
+    /**
+     * If this is an error, report the full stack trace. This allows
+     * Cloud Logging Error Reporting to pick up errors automatically (for
+     * severity 'error' or higher). In this case we leave the 'msg' property
+     * intact.
+     * 
+     * @see https://cloud.google.com/error-reporting/docs/formatting-error-messages
+     */
+    if (err && err?.stack) {
+      entry.message = err.stack;
     }
 
     if (req) {
-      baseEntry.httpRequest = req;
+      entry.httpRequest = this.formatHttpEntry(req);
     }
 
-    return baseEntry;
+    return entry;
+  }
+
+  private formatHttpEntry(request: BunyanHttpRequestRecord): HttpRequest {
+    const httpRequest: HttpRequest = {
+      requestMethod: request?.method ?? '',
+      requestUrl: request?.url ?? '',
+      remoteIp: request?.remoteAddress ?? '',
+      ...request,
+    }
+    return httpRequest;
   }
 }
 
 export function createStream(level?: Level, out?: Writable): Bunyan.Stream {
-  const transformer = new StackdriverTransformer();
+  const transformer = new GCPCloudLoggingTransformer();
 
   transformer.pipe(out || process.stdout);
 

@@ -1,7 +1,7 @@
 {
-  "name": "bunyan-gke-stackdriver",
+  "name": "bunyan-gcp-logging",
   "version": "0.1.0",
-  "description": "Bunyan Transport for GKE (Google Kubernetes Engine) using Stackdriver",
+  "description": "Bunyan Transport for GCP (Google Cloud Platform) using Cloud Logging",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "scripts": {
@@ -10,22 +10,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mcortesi/bunyan-stackdriver-fluentd.git"
+    "url": "git+https://github.com/italoiz/bunyan-gcp-logging.git"
   },
   "keywords": [
     "bunyan",
     "bunyan-transport",
-    "stackdriver",
-    "fluentd",
+    "cloud logging",
     "gcp",
-    "google-cloud"
+    "google-cloud",
+    "logging"
   ],
-  "author": "Mariano Cortesi <mcortesi@gmail.com>",
+  "author": "Italo Izaac <italoiz.dev@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mcortesi/bunyan-stackdriver-fluentd/issues"
+    "url": "https://github.com/italoiz/bunyan-gcp-logging/issues"
   },
-  "homepage": "https://github.com/mcortesi/bunyan-stackdriver-fluentd#readme",
+  "homepage": "https://github.com/italoiz/bunyan-gcp-logging#readme",
   "devDependencies": {
     "@types/bunyan": "^1.8.4",
     "bunyan": "^1.8.12",

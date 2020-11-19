@@ -1,5 +1,7 @@
 <p align="center">
-  <img alt="npm" src="https://img.shields.io/npm/v/bunyan-gcp-logging">
+  <a href="https://npmjs.com/package/bunyan-gcp-logging">
+    <img alt="npm" src="https://img.shields.io/npm/v/bunyan-gcp-logging">
+  </a>
 </p>
 
 ## Bunyan GCP Cloud Logging Transport

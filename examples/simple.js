@@ -3,11 +3,15 @@ const {createStream} = require('../dist');
 
 const logger = Bunyan.createLogger({
   name: 'mylog',
-  streams: [createStream()],
+  level: Bunyan.DEBUG,
+  serializers: Bunyan.stdSerializers,
+  streams: [createStream(Bunyan.DEBUG)],
 });
 
-logger.info('hola que tal');
+logger.info('simple log info');
 
-logger.info({todos: 'putos', que: 'los'}, 'pario a todos');
+logger.info({ data1: { id: 'sample-id' }, data2: { id: 'simple-id-2' } }, 'sample message');
 
-logger.error(new Error('esto esta mal!'));
+logger.info(new Error('sample error'));
+
+logger.info({ err: new Error('sample error'), field: 'other field' }, 'sample error message');

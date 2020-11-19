@@ -62,7 +62,7 @@ export class GCPCloudLoggingTransformer extends Transform {
    */
   private formatEntry(record: BunyanLogRecord): LogEntry {
     // extract field we want to transform or discard
-    const {name: logName, msg, level, err, req, v, hostname, pid, time: timestamp, ...others} = record;
+    const {name: logName, msg, level, err, v, hostname, pid, time: timestamp, ...others} = record;
 
     const entry: LogEntry = {
       logName,
@@ -82,11 +82,14 @@ export class GCPCloudLoggingTransformer extends Transform {
      */
     if (err && err?.stack) {
       entry.message = err.stack;
+      entry.serviceContext = { service: logName };
     }
 
-    if (req) {
-      entry.httpRequest = this.formatHttpEntry(req);
-    }
+    /**
+     * Try to get HTTP Request from log data to make an log on the GCP Cloud Logggin format.
+     */
+    const req = record?.httpRequest ?? record?.req;
+    if (req) entry.httpRequest = this.formatHttpEntry(req);
 
     return entry;
   }
